@@ -5,6 +5,10 @@
  */
 package projettelephone;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+import java.util.TimerTask;
 import javax.swing.*;
 
 public class CreerTelephone extends javax.swing.JFrame implements IAppel {
@@ -15,8 +19,11 @@ public class CreerTelephone extends javax.swing.JFrame implements IAppel {
     private AppelEnCours appelEnCours2;
     private JPanel paneParentTelephone1;
     private JPanel paneParentTelephone2;
-    
+    int dureeAppel = 0;
+    private Timer timer;
     private String numero;
+    private List<Contact> listeContactsTelephone1;
+    private List<Contact> listeContactsTelephone2;
     
     public CreerTelephone() {
         initComponents();
@@ -32,6 +39,7 @@ public class CreerTelephone extends javax.swing.JFrame implements IAppel {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
+        btnCreerPhone.setFont(new java.awt.Font("Tahoma", 0, 12)); // NOI18N
         btnCreerPhone.setText("Creer");
         btnCreerPhone.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -46,38 +54,32 @@ public class CreerTelephone extends javax.swing.JFrame implements IAppel {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(39, 39, 39)
+                        .addGap(42, 42, 42)
                         .addComponent(txtNumero, javax.swing.GroupLayout.PREFERRED_SIZE, 251, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(113, 113, 113)
-                        .addComponent(btnCreerPhone, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(82, Short.MAX_VALUE))
+                        .addGap(100, 100, 100)
+                        .addComponent(btnCreerPhone, javax.swing.GroupLayout.PREFERRED_SIZE, 133, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(47, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(39, 39, 39)
-                .addComponent(txtNumero, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 122, Short.MAX_VALUE)
-                .addComponent(btnCreerPhone)
-                .addGap(38, 38, 38))
+                .addGap(44, 44, 44)
+                .addComponent(txtNumero, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(29, 29, 29)
+                .addComponent(btnCreerPhone, javax.swing.GroupLayout.PREFERRED_SIZE, 36, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(41, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(18, 18, 18)
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         );
 
         pack();
@@ -149,19 +151,46 @@ public class CreerTelephone extends javax.swing.JFrame implements IAppel {
     public void onClickDecrocher(String phoneSourceTitle) {
         appelEnCours1 = new AppelEnCours();
         appelEnCours2 = new AppelEnCours();
-
+        
+        if (phoneSourceTitle.equals(telephone1.getTitle())) {
+            appelEnCours1.setNumero(telephone2.getTitle().substring(5));
+            appelEnCours2.setNumero(phoneSourceTitle.substring(5));
+        } else {
+            appelEnCours2.setNumero(telephone1.getTitle().substring(5));
+            appelEnCours1.setNumero(phoneSourceTitle.substring(5));
+        }
+        
         appelEnCours1.setListener(this);
         appelEnCours2.setListener(this);
         telephone1.setContentPane(appelEnCours1);
         telephone2.setContentPane(appelEnCours2);
         telephone1.setVisible(true);
         telephone2.setVisible(true);
+        
+        timer = new Timer(1000, (ActionEvent e) -> {
+            dureeAppel++;
+            if (dureeAppel < 10) {
+                appelEnCours1.setTemps("Durée: 00:0" + String.valueOf(dureeAppel));
+                appelEnCours2.setTemps("Durée: 00:0" + String.valueOf(dureeAppel));
+            } else {
+                appelEnCours1.setTemps("Durée: 00:" + String.valueOf(dureeAppel));
+                appelEnCours2.setTemps("Durée: 00:" + String.valueOf(dureeAppel));
+            }
+        });
+        
+        timer.start();
     }
 
     @Override
     public void onClickCouper(String phoneSourceTitle) {
         telephone1.setContentPane(paneParentTelephone1);
         telephone2.setContentPane(paneParentTelephone2);
+        
+        if (timer != null && timer.isRunning()) {
+            timer.stop();
+        }
+        
+        JOptionPane.showMessageDialog(this, "Appel terminé. Durée: " + dureeAppel + " secondes", "Fin d'appel", JOptionPane.INFORMATION_MESSAGE);
     }
 
     @Override
@@ -184,6 +213,15 @@ public class CreerTelephone extends javax.swing.JFrame implements IAppel {
             telephone1.setVisible(true);
             telephone2.setContentPane(appelEntrant);
             telephone2.setVisible(true);
+        }
+    }
+    
+    @Override
+    public void onClickFermer(String phoneSourceTitle) {
+        if (phoneSourceTitle.equals(telephone1.getTitle())) {
+            telephone1.setContentPane(paneParentTelephone1);
+        } else {
+            telephone2.setContentPane(paneParentTelephone2);
         }
     }
 }
